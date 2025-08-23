@@ -43,6 +43,7 @@ export default function App() {
       initializeLiveI18n({
         apiKey,
         customerId,
+        defaultLanguage: 'es-ES',
       });
       setIsInitialized(true);
       console.log('LiveI18n initialized successfully');
