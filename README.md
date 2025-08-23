@@ -15,15 +15,21 @@ This is a demo Expo application showcasing the LiveI18n React Native Expo SDK fo
 
 ## Quick Start
 
-1. **Install dependencies:**
+1. **Clone the repository:**
    ```bash
-   npm install @livei18n/react-native-expo-sdk
+   git clone https://github.com/LiveI18n/expo-demo.git
+   cd expo-demo
    ```
 
-2. **Configure your API credentials:**
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure your API credentials:**
    - Copy `.env.local` and update with your LiveI18n credentials:
    ```bash
-   cp .env.local .env.local.example
+   cp .env.local.example .env.local 
    # Edit .env.local with your actual credentials
    ```
    
@@ -32,12 +38,12 @@ This is a demo Expo application showcasing the LiveI18n React Native Expo SDK fo
    EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID=your-actual-customer-id
    ```
 
-3. **Start the development server:**
+4. **Start the development server:**
    ```bash
    npm start
    ```
 
-4. **Run on your preferred platform:**
+5. **Run on your preferred platform:**
    - **iOS Simulator**: Press `i` in the terminal or scan QR code with Camera app
    - **Android Emulator**: Press `a` in the terminal or scan QR code with Expo Go app
    - **Physical Device**: Install Expo Go app and scan the QR code
@@ -77,7 +83,7 @@ import { LiveText, updateDefaultLanguage } from '@livei18n/react-native-expo-sdk
 </LiveText>
 
 // Update global default language
-updateDefaultLanguage('es-ES'); // All LiveText components will now use Spanish
+updateDefaultLanguage('es-ES'); // All LiveText components will now use Spanish on re-render
 ```
 
 ## Demo Features
