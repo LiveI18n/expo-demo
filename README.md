@@ -27,7 +27,7 @@ This is a demo Expo application showcasing the LiveI18n React Native Expo SDK fo
    ```
 
 3. **Configure your API credentials:**
-   - Copy `.env.local` and update with your LiveI18n credentials:
+   - Copy `.env.local.example` to `.env.local` and update with your LiveI18n credentials:
    ```bash
    cp .env.local.example .env.local 
    # Edit .env.local with your actual credentials
