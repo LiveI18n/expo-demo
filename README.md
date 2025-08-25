@@ -144,15 +144,6 @@ The LiveI18n React Native Expo SDK includes:
 - Hot reload and fast refresh support
 - Web compatibility for testing in browsers
 
-## Development
-
-To modify this demo:
-
-1. **Edit the main app**: Modify `App.tsx`
-2. **Add new languages**: Update the language selector array
-3. **Test SDK features**: Add new LiveText components
-4. **Customize styling**: Modify the StyleSheet object
-
 ## Learn More
 
 - [LiveI18n Documentation](https://docs.livei18n.com)
