@@ -124,27 +124,6 @@ updateDefaultLanguage('es-ES'); // All LiveText components will now use Spanish 
 - ✅ **Expo Go** (Development)
 - ✅ **EAS Build** (Production)
 
-## Demo vs Production Mode
-
-### Demo Mode (Default)
-The included `.env.local` file contains demo credentials:
-- Shows fallback text (original English) instead of translations
-- Demonstrates SDK integration and UI components
-- Safe for development and testing
-
-### Production Mode
-To see real translations:
-1. Get your API credentials from [LiveI18n API Keys](https://dashboard.livei18n.com/api-keys)
-2. Update `.env.local` with your real credentials:
-   ```env
-   EXPO_PUBLIC_LIVEI18N_API_KEY=your-real-api-key
-   EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID=your-real-customer-id
-   ```
-3. Restart the Expo development server
-4. You'll now see actual translations instead of fallback text
-
-**Note**: Never commit real API credentials to version control. The `.env.local` file is already excluded in `.gitignore`.
-
 ## Expo SDK Features
 
 The LiveI18n React Native Expo SDK includes:
