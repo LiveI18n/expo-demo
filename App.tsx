@@ -15,62 +15,19 @@ import {
   Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { initializeLiveI18n, LiveText, updateDefaultLanguage } from '@livei18n/react-native-expo-sdk';
+import { LiveText, LiveI18nProvider, useLiveI18n } from '@livei18n/react-native-expo-sdk';
 
-export default function App() {
+function DemoContent({ onResetCredentials }: { onResetCredentials: () => void }) {
   const isDarkMode = useColorScheme() === 'dark';
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [defaultLanguage, setDefaultLanguage] = useState('es-ES');
+  const { defaultLanguage, updateDefaultLanguage } = useLiveI18n();
   const [customText, setCustomText] = useState('Hello, how are you today?');
-  const [rerenderKey, setRerenderKey] = useState(0);
-
-  useEffect(() => {
-    // Initialize LiveI18n using environment variables
-    const apiKey = process.env.EXPO_PUBLIC_LIVEI18N_API_KEY;
-    const customerId = process.env.EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID;
-
-    if (!apiKey || !customerId) {
-      console.warn('LiveI18n: Missing API key or customer ID in environment variables');
-      Alert.alert(
-        'Configuration Required', 
-        'Please set EXPO_PUBLIC_LIVEI18N_API_KEY and EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID in your .env.local file. Using demo mode with fallback text.'
-      );
-      setIsInitialized(true); // Still allow demo to show components
-      return;
-    }
-
-    try {
-      initializeLiveI18n({
-        apiKey,
-        customerId,
-        defaultLanguage: 'es-ES',
-      });
-      setIsInitialized(true);
-      console.log('LiveI18n initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize LiveI18n:', error);
-      Alert.alert('Initialization Error', 'Failed to initialize LiveI18n SDK. Using fallback text.');
-      setIsInitialized(true); // Still allow demo to show components
-    }
-  }, []);
 
   const handleLanguageChange = (newLanguage: string) => {
-    setDefaultLanguage(newLanguage);
     updateDefaultLanguage(newLanguage);
-    setRerenderKey(prev => prev + 1); // Force re-render of all LiveText components
   };
 
-  if (!isInitialized) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.loadingText}>Initializing LiveI18n...</Text>
-        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]} key={rerenderKey}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" style={styles.scrollView}>
         <View style={styles.header}>
@@ -223,13 +180,72 @@ export default function App() {
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: isDarkMode ? '#888' : '#999' }]}>
-            💡 Language changes update the global default language setting.
-            {'\n'}All LiveText components automatically use the current default language.
-            {'\n'}Current language: {defaultLanguage}
+            💡 Language changes update the context default language setting.
+            {'\n'}All LiveText components automatically re-render when language changes.
+            {'\n'}Current language: {defaultLanguage || 'es-ES'}
           </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function App() {
+  const isDarkMode = useColorScheme() === 'dark';
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [validatedConfig, setValidatedConfig] = useState<{apiKey: string, customerId: string} | null>(null);
+
+  useEffect(() => {
+    // Initialize LiveI18n using environment variables
+    const apiKey = process.env.EXPO_PUBLIC_LIVEI18N_API_KEY;
+    const customerId = process.env.EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID;
+
+    if (!apiKey || !customerId) {
+      console.error('LiveI18n: Missing API key or customer ID in environment variables');
+      Alert.alert(
+        'Configuration Required', 
+        'Please set EXPO_PUBLIC_LIVEI18N_API_KEY and EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID in your .env.local file.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    try {
+      setValidatedConfig({
+        apiKey,
+        customerId
+      });
+      setIsInitialized(true);
+      console.log('LiveI18n config validated successfully');
+    } catch (error) {
+      console.error('Failed to validate LiveI18n config:', error);
+      Alert.alert(
+        'Configuration Error', 
+        'Failed to validate LiveI18n SDK config.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, []);
+
+  if (!isInitialized || !validatedConfig) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.loadingText}>
+          {!validatedConfig ? 'Please configure API credentials' : 'Initializing LiveI18n...'}
+        </Text>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <LiveI18nProvider config={{
+      apiKey: validatedConfig.apiKey,
+      customerId: validatedConfig.customerId,
+      defaultLanguage: 'es-ES'
+    }}>
+      <DemoContent onResetCredentials={() => setIsInitialized(false)} />
+    </LiveI18nProvider>
   );
 }
 

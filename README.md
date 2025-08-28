@@ -53,23 +53,31 @@ This is a demo Expo application showcasing the LiveI18n React Native Expo SDK fo
 
 ### 1. Initialize the SDK
 
+The SDK provides a convenient context provider. Put it at the outermost layer. It should encompass every portion of your app that you want to be able to auto-translate.
+
 ```typescript
-import { initializeLiveI18n } from '@livei18n/react-native-expo-sdk';
+import { LiveI18nProvider } from '@livei18n/react-native-expo-sdk';
 
 // Using environment variables (recommended)
 const apiKey = process.env.EXPO_PUBLIC_LIVEI18N_API_KEY;
 const customerId = process.env.EXPO_PUBLIC_LIVEI18N_CUSTOMER_ID;
 
-initializeLiveI18n({
+const config = {
   apiKey,
   customerId,
-});
+  // other configurations
+};
+<LiveI18nProvider config={config}>
+  <YourApp />
+</LiveI18nProvider>
 ```
 
 ### 2. Use the LiveText Component
 
 ```typescript
-import { LiveText, updateDefaultLanguage } from '@livei18n/react-native-expo-sdk';
+import { LiveText, useLiveI18n } from '@livei18n/react-native-expo-sdk';
+
+const { updateDefaultLanguage } = useLiveI18n();
 
 // Basic usage (uses global default language)
 <LiveText>Hello, world!</LiveText>
@@ -83,20 +91,13 @@ import { LiveText, updateDefaultLanguage } from '@livei18n/react-native-expo-sdk
 </LiveText>
 
 // Update global default language
-updateDefaultLanguage('es-ES'); // All LiveText components will now use Spanish on re-render
+updateDefaultLanguage('es-ES'); // All LiveText components will now use Spanish
 ```
 
 ## Demo Features
 
 ### 📱 **Interactive UI**
 - Language selector with 5 popular languages (Spanish, French, German, Japanese, Chinese)
-- Clean, modern design with rounded corners and proper spacing
-- Responsive layout that works on all screen sizes
-
-### 🎨 **Theme Support**
-- Automatic dark/light mode detection
-- Smooth theme transitions
-- Proper contrast ratios for accessibility
 
 ### 🔄 **Real-time Translation**
 - Static text examples showing common app strings
@@ -104,17 +105,13 @@ updateDefaultLanguage('es-ES'); // All LiveText components will now use Spanish 
 - Context and tone examples comparing formal vs casual translations
 - Global language management - change once, update everywhere
 
-### 🌐 **Global Language Management**
-- Uses `updateDefaultLanguage()` to set the global default language
+### 🌐 **Language Management**
+- Use `updateDefaultLanguage()` from `useLiveI18n` hook to set the global default language
 - All `<LiveText>` components automatically use the current default language
-- Page re-renders when language changes to show updated translations
-- Clean, centralized language switching without prop drilling
 
 ### ✅ **Expo-Specific Features**
 - **AsyncStorage**: Persistent caching of translations
 - **Expo Localization**: Automatic device locale detection
-- **Hot Reload**: Instant updates during development
-- **Universal Platform**: Runs on iOS, Android, and Web
 
 ## Platform Support
 
@@ -141,8 +138,6 @@ The LiveI18n React Native Expo SDK includes:
 ### Expo Developer Experience
 - Full TypeScript support with proper type definitions
 - Works with Expo CLI, EAS Build, and Expo Go
-- Hot reload and fast refresh support
-- Web compatibility for testing in browsers
 
 ## Learn More
 
