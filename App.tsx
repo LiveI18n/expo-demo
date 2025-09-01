@@ -172,9 +172,6 @@ function DemoContent({ onResetCredentials }: { onResetCredentials: () => void })
             <Text style={[styles.originalLabel, { color: isDarkMode ? '#ccc' : '#666' }]}>
               ✅ Expo Localization integration
             </Text>
-            <Text style={[styles.originalLabel, { color: isDarkMode ? '#ccc' : '#666' }]}>
-              ✅ Hot reload support
-            </Text>
           </View>
         </View>
 
