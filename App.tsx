@@ -13,17 +13,63 @@ import {
   useColorScheme,
   View,
   Alert,
+  ActivityIndicator,
+  Modal,
+  FlatList,
+  Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { LiveText, LiveI18nProvider, useLiveI18n } from '@livei18n/react-native-expo-sdk';
+import { LiveText, LiveI18nProvider, useLiveI18n, type SupportedLanguage } from '@livei18n/react-native-expo-sdk';
 
 function DemoContent({ onResetCredentials }: { onResetCredentials: () => void }) {
   const isDarkMode = useColorScheme() === 'dark';
-  const { defaultLanguage, updateDefaultLanguage } = useLiveI18n();
+  const { defaultLanguage, updateDefaultLanguage, getSupportedLanguages } = useLiveI18n();
   const [customText, setCustomText] = useState('Hello, how are you today?');
+  const [supportedLanguages, setSupportedLanguages] = useState<SupportedLanguage[]>([]);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  // Load supported languages from API (top 20 only)
+  useEffect(() => {
+    const loadLanguages = async () => {
+      try {
+        setLanguagesLoading(true);
+        const response = await getSupportedLanguages(); // Default to top 20
+        setSupportedLanguages(response.languages);
+      } catch (error) {
+        console.error('Failed to load supported languages:', error);
+        Alert.alert(
+          'Language Loading Error',
+          'Failed to load supported languages. Using fallback languages.',
+          [{ text: 'OK' }]
+        );
+        // Fallback to basic languages
+        setSupportedLanguages([
+          { name: 'English (US)', locale: 'en-US', flag: '🇺🇸' },
+          { name: 'Spanish (Spain)', locale: 'es-ES', flag: '🇪🇸' },
+          { name: 'French (France)', locale: 'fr-FR', flag: '🇫🇷' },
+          { name: 'German (Germany)', locale: 'de-DE', flag: '🇩🇪' },
+          { name: 'Japanese', locale: 'ja-JP', flag: '🇯🇵' },
+        ]);
+      } finally {
+        setLanguagesLoading(false);
+      }
+    };
+
+    loadLanguages();
+  }, [getSupportedLanguages]);
 
   const handleLanguageChange = (newLanguage: string) => {
     updateDefaultLanguage(newLanguage);
+    setDropdownVisible(false);
+  };
+
+  const getCurrentLanguageDisplay = () => {
+    const currentLang = supportedLanguages.find(lang => lang.locale === defaultLanguage);
+    if (currentLang) {
+      return `${currentLang.flag} ${currentLang.name}`;
+    }
+    return defaultLanguage || 'Select Language';
   };
 
   return (
@@ -43,25 +89,36 @@ function DemoContent({ onResetCredentials }: { onResetCredentials: () => void })
           <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>
             Language Selector
           </Text>
-          <View style={styles.languageButtons}>
-            {['es-ES', 'fr-FR', 'de-DE', 'ja-JP', 'zh-CN'].map((lang) => (
+
+          {languagesLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={isDarkMode ? '#fff' : '#000'} />
+              <Text style={[styles.loadingText, { color: isDarkMode ? '#ccc' : '#666' }]}>
+                Loading languages...
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.dropdownContainer}>
               <TouchableOpacity
-                key={lang}
                 style={[
-                  styles.languageButton,
-                  defaultLanguage === lang && styles.activeLanguageButton
+                  styles.dropdownButton,
+                  { 
+                    backgroundColor: isDarkMode ? '#333' : '#f8f8f8',
+                    borderColor: isDarkMode ? '#555' : '#ddd'
+                  }
                 ]}
-                onPress={() => handleLanguageChange(lang)}
+                onPress={() => setDropdownVisible(true)}
+                disabled={languagesLoading}
               >
-                <Text style={[
-                  styles.languageButtonText,
-                  defaultLanguage === lang && styles.activeLanguageButtonText
-                ]}>
-                  {lang}
+                <Text style={[styles.dropdownButtonText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                  {getCurrentLanguageDisplay()}
+                </Text>
+                <Text style={[styles.dropdownArrow, { color: isDarkMode ? '#fff' : '#000' }]}>
+                  ▼
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -160,29 +217,88 @@ function DemoContent({ onResetCredentials }: { onResetCredentials: () => void })
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>
-            Expo-Specific Features
-          </Text>
-          
-          <View style={[styles.exampleRow, { backgroundColor: isDarkMode ? '#333' : '#f9f9f9' }]}>
-            <Text style={[styles.originalLabel, { color: isDarkMode ? '#ccc' : '#666' }]}>
-              ✅ AsyncStorage caching enabled
-            </Text>
-            <Text style={[styles.originalLabel, { color: isDarkMode ? '#ccc' : '#666' }]}>
-              ✅ Expo Localization integration
-            </Text>
-          </View>
-        </View>
-
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: isDarkMode ? '#888' : '#999' }]}>
-            💡 Language changes update the context default language setting.
+            💡 Languages are fetched dynamically from the LiveI18n API.
             {'\n'}All LiveText components automatically re-render when language changes.
             {'\n'}Current language: {defaultLanguage || 'es-ES'}
+            {'\n'}SDK version: @livei18n/react-native-expo-sdk@1.0.4
           </Text>
         </View>
       </ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={dropdownVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDropdownVisible(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setDropdownVisible(false)}
+        >
+          <View style={[
+            styles.modalContent,
+            { backgroundColor: isDarkMode ? '#222' : '#fff' }
+          ]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>
+                Select Language
+              </Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setDropdownVisible(false)}
+              >
+                <Text style={[styles.closeButtonText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                  ✕
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            <FlatList
+              data={supportedLanguages}
+              keyExtractor={(item) => item.locale}
+              showsVerticalScrollIndicator={true}
+              style={styles.languageList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.languageOption,
+                    { 
+                      backgroundColor: defaultLanguage === item.locale 
+                        ? (isDarkMode ? '#007AFF' : '#007AFF') 
+                        : (isDarkMode ? '#333' : '#f8f8f8')
+                    }
+                  ]}
+                  onPress={() => handleLanguageChange(item.locale)}
+                >
+                  <Text style={[
+                    styles.languageOptionText,
+                    { 
+                      color: defaultLanguage === item.locale 
+                        ? '#fff' 
+                        : (isDarkMode ? '#fff' : '#000')
+                    }
+                  ]}>
+                    {item.flag} {item.name}
+                  </Text>
+                  <Text style={[
+                    styles.languageLocaleText,
+                    { 
+                      color: defaultLanguage === item.locale 
+                        ? '#fff' 
+                        : (isDarkMode ? '#ccc' : '#666')
+                    }
+                  ]}>
+                    {item.locale}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -285,30 +401,101 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 15,
   },
-  languageButtons: {
+  loadingContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  languageButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0',
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  dropdownContainer: {
+    marginBottom: 10,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    minHeight: 50,
   },
-  activeLanguageButton: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  languageButtonText: {
-    fontSize: 14,
+  dropdownButtonText: {
+    fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    flex: 1,
   },
-  activeLanguageButtonText: {
-    color: '#fff',
+  dropdownArrow: {
+    fontSize: 12,
+    marginLeft: 10,
+  },
+  languageInfo: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '70%',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  languageList: {
+    maxHeight: 400,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  languageOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+  },
+  languageLocaleText: {
+    fontSize: 14,
+    fontWeight: 'normal',
   },
   exampleRow: {
     marginBottom: 15,
